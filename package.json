@@ -1,0 +1,41 @@
+{
+  "name": "team-activity-monitor",
+  "version": "1.0.0",
+  "description": "CLI chatbot that monitors team activity across JIRA and GitHub",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "smoke-test": "tsx scripts/smoke-test.ts"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "jira",
+    "github",
+    "ai",
+    "chatbot",
+    "team-activity"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.58",
+    "@ai-sdk/google": "^3.0.43",
+    "@ai-sdk/openai": "^3.0.41",
+    "ai": "^6.0.116",
+    "chalk": "^5.6.2",
+    "dotenv": "^17.3.1",
+    "fuse.js": "^7.1.0",
+    "ora": "^9.3.0",
+    "yaml": "^2.8.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.3.3",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,40 @@
+# =============================================================================
+# Team Activity Monitor — Configuration
+# =============================================================================
+# Copy this file to config.yaml and update the values for your environment.
+
+# AI Configuration
+ai:
+  provider: "gemini"             # Options: gemini | openai | claude
+  model: "gemini-2.0-flash"     # Model name for the chosen provider
+  temperature: 0.3              # Lower = more factual, higher = more creative
+  max_retries: 2                # Max retry attempts on hallucination detection
+  validate_response: true       # Enable/disable post-generation validation
+
+# JIRA Configuration
+jira:
+  project_keys:                  # JIRA project keys to search within
+    - "PROJ"
+  board_id: 1                   # Board ID for sprint data (optional, set to 0 to disable)
+  lookback_sprints: 4           # Number of past sprints to include (sprint mode)
+  lookback_days: 56             # Fallback: days to look back (day mode, ~8 weeks)
+  lookback_mode: "days"         # "sprints" or "days" — which mode to use
+
+# GitHub Configuration
+github:
+  repos:                         # Repositories to monitor (format: owner/repo)
+    - "org/repo-1"
+  lookback_days: 56             # Days to look back for commits/PRs
+
+# Cache Configuration
+cache:
+  enabled: true
+  ttl_minutes: 5                # Time-to-live for cached API responses
+
+# Team Members
+# Auto-populated when users are discovered via JIRA/GitHub API search.
+# You can also pre-populate this list manually.
+team: []
+  # - name: "John Smith"
+  #   jira_account_id: "5a1234567890abcdef123456"
+  #   github_username: "jsmith"

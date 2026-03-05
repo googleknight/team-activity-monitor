@@ -1,8 +1,8 @@
 # Technical Specification: Team Activity Monitor
 
-> **Version**: 1.2 (Updated Draft)
+> **Version**: 1.3 (Final Implementation)
 > **Date**: 2026-03-05
-> **Status**: Draft — Pending Review
+> **Status**: Finalized — Matches Implementation
 
 ---
 
@@ -114,7 +114,7 @@ graph TB
 
 - **Runtime**: Node.js 20+ (LTS)
 - **Language**: TypeScript 5.x (strict mode)
-- **Dev runner**: `ts-node` (standard TypeScript execution)
+- **Dev runner**: `tsx` (modern TypeScript execution with robust ESM support)
 - **Build**: `tsc` → `dist/` (for final deliverable)
 
 ---
@@ -179,7 +179,7 @@ team:
 
 ### 3.3 Config Loading
 
-- **Module**: `src/config/index.ts`
+- **Module**: `src/config/loader.ts`
 - **Validation**: All config values validated with Zod schemas at startup
 - **Behavior**: Application exits with a clear error message if required config is missing
 - **Config writing**: When a new user is discovered via API, `config.yaml` is updated and saved back
@@ -886,7 +886,7 @@ team-activity-monitor/
 │   │   ├── cache-manager.ts           # In-memory TTL cache
 │   │   └── orchestrator.ts            # Main pipeline orchestration
 │   ├── config/                        # Configuration management
-│   │   ├── index.ts                   # Config loader + Zod validation
+│   │   ├── loader.ts                  # Config loader + Zod validation
 │   │   └── schema.ts                  # Zod schemas for config
 │   ├── types/                         # Shared TypeScript types
 │   │   ├── jira.ts                    # JIRA data models + Zod schemas
@@ -932,7 +932,7 @@ team-activity-monitor/
 | Package       | Purpose                    |
 | ------------- | -------------------------- |
 | `typescript`  | TypeScript compiler        |
-| `ts-node`     | TypeScript execution (dev) |
+| `tsx`         | TypeScript execution (dev) |
 | `@types/node` | Node.js type definitions   |
 
 > [!TIP]
