@@ -44,11 +44,11 @@ ai:
 
 jira:
   project_keys: ["YOUR-PROJECT"]
-  lookback_days: 56
+  lookback_days: 7
 
 github:
   repos: ["your-org/your-repo"]
-  lookback_days: 56
+  lookback_days: 7
 
 team: [] # Will auto-populate as you use the app
 ```

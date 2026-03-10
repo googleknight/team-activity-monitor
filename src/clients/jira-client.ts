@@ -71,7 +71,7 @@ export function buildJqlQuery(
   const projects = projectKeys.map((k) => `"${k}"`).join(", ");
   const startDate = dateRange.from.toISOString().split("T")[0]; // yyyy-mm-dd
 
-  return `assignee = "${accountId}" AND project IN (${projects}) AND updated >= "${startDate}" ORDER BY updated DESC`;
+  return `assignee = "${accountId}" AND project IN (${projects}) AND statusCategory != Done AND updated >= "${startDate}" ORDER BY updated DESC`;
 }
 
 /**

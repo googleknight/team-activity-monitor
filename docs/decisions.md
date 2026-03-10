@@ -89,13 +89,13 @@ A hand-rolled wrapper with `switch(provider)` and 3 adapter functions works, but
 
 ## D6: Configurable Time Window for "Recent" Activity
 
-| Aspect             | Detail                                                                                                                                                                                                                                                                                                                    |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Decision**       | Make the "recent activity" window **fully configurable** via `config.yaml`. Support two modes: **sprint-based** (last N sprints) or **day-based** (last N days). Default to 4 sprints / 56 days.                                                                                                                          |
-| **Alternatives**   | Hardcoded to 4 sprints, fixed 8-week rolling window                                                                                                                                                                                                                                                                       |
-| **Rationale**      | Different teams and situations need different time windows. A team doing a post-mortem might want 1 sprint. A quarterly review might want 12 weeks. Making this configurable via a simple config entry (`lookback_sprints: 4` or `lookback_days: 14`) costs almost nothing to implement but adds significant flexibility. |
-| **Config example** | `jira.lookback_sprints: 4` and `github.lookback_days: 56` — these can be changed by the user at any time without touching code.                                                                                                                                                                                           |
-| **Trade-off**      | None significant. The config parsing already handles this; the JIRA client just reads the configured value.                                                                                                                                                                                                               |
+| Aspect             | Detail                                                                                                                                                                                                                       |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Problem**        | The prompt asks for "recent activity" but doesn't define what "recent" means. Is it yesterday? Last week? Last month?                                                                                                        |
+| **Decision**       | Make the "recent activity" window **fully configurable** via `config.yaml`. Support two modes: **sprint-based** (last N sprints) or **day-based** (last N days). Default to 7 days.                                          |
+| **Rationale**      | Different teams have different cadence. Sprints are more meaningful in agile environments, but flat day periods are simpler. Giving the user control prevents the CLI from becoming a black box that makes poor assumptions. |
+| **Config example** | `jira.lookback_days: 7` and `github.lookback_days: 7` — these can be changed by the user at any time without touching code.                                                                                                  |
+| **Trade-off**      | None significant. The config parsing already handles this; the JIRA client just reads the configured value.                                                                                                                  |
 
 ---
 
@@ -199,7 +199,7 @@ A hand-rolled wrapper with `switch(provider)` and 3 adapter functions works, but
 | Clean grouped structure    | Flat files                 | Demonstrates architectural thinking per eval criteria |
 | Vercel AI SDK              | LangChain / custom wrapper | Right abstraction level — not too heavy, not too thin |
 | Hybrid user registry       | Static-only config         | Self-building, demonstrates real API integration      |
-| Configurable time window   | Hardcoded 4 sprints        | Flexibility for different use cases                   |
+| Configurable time window   | Hardcoded 7 days           | Flexibility for different use cases                   |
 | Basic in-memory cache      | No cache                   | Low effort, earns bonus points                        |
 | Standard tooling (ts-node) | Newer alternatives         | Conventional, well-documented, production-standard    |
 | Validated AI output        | Blind trust in LLM         | Prevents showing fabricated ticket/PR numbers         |

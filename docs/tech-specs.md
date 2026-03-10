@@ -55,7 +55,7 @@ flowchart LR
 | A1  | Team members can be pre-registered in `config.yaml` **or** discovered dynamically via JIRA/GitHub API search |
 | A2  | JIRA instance is Atlassian Cloud (REST API v3)                                                               |
 | A3  | GitHub repos are accessible with a single PAT (Personal Access Token)                                        |
-| A4  | "Recent" is configurable — defaults to 4 sprints or 56 days, but can be changed via `config.yaml`            |
+| A4  | "Recent" is configurable — defaults to 7 days, but can be changed via `config.yaml`                          |
 | A5  | All JIRA statuses are included in results                                                                    |
 | A6  | The AI provider defaults to Gemini (free tier) but is switchable via config using Vercel AI SDK              |
 
@@ -152,15 +152,15 @@ jira:
     - "TEAM"
   board_id: 42 # Board ID for sprint data (optional)
   lookback_sprints: 4 # Number of past sprints to include (sprint mode)
-  lookback_days: 56 # Fallback: days to look back (day mode)
-  lookback_mode: "sprints" # "sprints" or "days" — which mode to use
+  lookback_days: 7 # Fallback: days to look back (day mode)
+  lookback_mode: "days" # "sprints" or "days" — which mode to use
 
 # GitHub Configuration
 github:
   repos: # Repositories to monitor
     - "org/repo-1"
     - "org/repo-2"
-  lookback_days: 56 # Days to look back for commits/PRs
+  lookback_days: 7 # Days to look back for commits/PRs
 
 # Cache Configuration
 cache:
@@ -268,6 +268,7 @@ function buildJqlQuery(
 ```
 assignee = "{accountId}"
 AND project IN ({projectKeys})
+AND statusCategory != Done
 AND updated >= "{startDate}"
 ORDER BY updated DESC
 ```
@@ -1064,7 +1065,7 @@ async function generateWithRetry(
 If all retry attempts produce hallucinated content, the system falls back to a **template-based response** that mechanically lists the raw data. This guarantees 100% factual output:
 
 ```
-📋 John Smith — Activity Summary (Last 4 Sprints)
+📋 John Smith — Activity Summary (Last 7 Days)
 
 **JIRA Issues (8)**
   🟡 In Progress:
@@ -1142,7 +1143,7 @@ You: What is John working on these days?
 
 ⠋ Fetching activity for John Smith...
 
-📋 John Smith — Activity Summary (Last 4 Sprints)
+📋 John Smith — Activity Summary (Last 7 Days)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 John is primarily focused on the **payment service refactor** and has been
@@ -1179,7 +1180,7 @@ Is this correct? (y/n): y
 
 ⠋ Fetching activity for Lisa Park...
 
-📋 Lisa Park — Activity Summary (Last 4 Sprints)
+📋 Lisa Park — Activity Summary (Last 7 Days)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ...
 

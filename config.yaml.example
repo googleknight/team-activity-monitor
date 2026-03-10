@@ -6,7 +6,7 @@
 # AI Configuration
 ai:
   provider: "gemini"             # Options: gemini | openai | claude
-  model: "gemini-2.0-flash"     # Model name for the chosen provider
+  model: "gemini-3.1-flash-lite-preview" # Model name for the chosen provider
   temperature: 0.3              # Lower = more factual, higher = more creative
   max_retries: 2                # Max retry attempts on hallucination detection
   validate_response: true       # Enable/disable post-generation validation
@@ -17,14 +17,14 @@ jira:
     - "PROJ"
   board_id: 1                   # Board ID for sprint data (optional, set to 0 to disable)
   lookback_sprints: 4           # Number of past sprints to include (sprint mode)
-  lookback_days: 56             # Fallback: days to look back (day mode, ~8 weeks)
+  lookback_days: 7             # Fallback: days to look back (day mode, ~8 weeks)
   lookback_mode: "days"         # "sprints" or "days" — which mode to use
 
 # GitHub Configuration
 github:
   repos:                         # Repositories to monitor (format: owner/repo)
     - "org/repo-1"
-  lookback_days: 56             # Days to look back for commits/PRs
+  lookback_days: 7             # Days to look back for commits/PRs
 
 # Cache Configuration
 cache:
