@@ -12,6 +12,7 @@ import {
   clearCache,
   init as initOrchestrator,
 } from "./core/orchestrator.js";
+import { sanitizeInput } from "./core/query-parser.js";
 import { getTeam } from "./core/user-matcher.js";
 import type { TeamMember } from "./types/activity.js";
 
@@ -75,6 +76,14 @@ export async function startCLI(): Promise<void> {
 
     // Handle special commands
     if (await handleSpecialCommand(input, rl)) {
+      rl.prompt();
+      continue;
+    }
+
+    // SECURITY: Pre-check for blocked inputs and show a friendly message
+    const sanitized = sanitizeInput(input);
+    if ("blocked" in sanitized) {
+      console.log(chalk.yellow(`\n🚫 ${sanitized.reason}\n`));
       rl.prompt();
       continue;
     }
