@@ -77,6 +77,8 @@ Show me recent activity for Sarah
 What JIRA tickets is John working on?
 Show me Lisa's recent pull requests
 What has Mike committed this week?
+Who all worked on GitHub this week? (Team-wide)
+Show me team activity (Team-wide)
 ```
 
 ### Special Commands
@@ -128,6 +130,7 @@ src/
 - **Hybrid user registry** — local config + API discovery with auto-persist
 - **Zod validation** — runtime type safety for config and API responses
 
+See `docs/FEATURES_AND_SAFEGUARDS.md` for a comprehensive list of features and security safeguards.
 See `docs/decisions.md` for the full rationale behind each decision.
 
 ## Building for Production

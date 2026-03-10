@@ -19,6 +19,7 @@
 9. [Dependencies](#9-dependencies)
 10. [Testing Strategy](#10-testing-strategy)
 11. [AI Hallucination Prevention & Retry Strategy](#11-ai-hallucination-prevention--retry-strategy)
+12. [Security Safeguards](#12-security-safeguards)
 
 ---
 
@@ -31,20 +32,24 @@ A CLI-based chatbot that answers questions like _"What is [member] working on?"_
 ### 1.2 High-Level Flow
 
 ```mermaid
-flowchart LR
-    A[User types question] --> B[Query Parser]
-    B --> C{User identified?}
-    C -->|Yes| D[Fetch JIRA Data]
-    C -->|Yes| E[Fetch GitHub Data]
-    C -->|Ambiguous| F[Ask user to disambiguate]
-    C -->|Not found| G[Search JIRA/GitHub APIs]
-    F --> C
+flowchart TD
+    A[User types query] --> S[Input Sanitization Filter]
+    S -->|Blocked| EB[Show Rejection Alert]
+    S -->|Valid| B[Query Parser AI/Regex]
+    B --> C{Scope?}
+    C -->|Team| T[Loop over ALL members]
+    C -->|Individual| I{User identified locally?}
+    I -->|Yes| D[Fetch Activity Data]
+    I -->|Ambiguous| F[Ask to disambiguate or Manual Entry M]
+    I -->|Not found| G[Search JIRA/GitHub APIs]
+    F -->|Pick| I
+    F -->|Manual M| M[Verify GitHub Username]
+    M -->|Success| I
     G --> H{Found online?}
-    H -->|Yes, confirmed| I[Save to config.yaml]
-    I --> D
-    H -->|No| J[User not found error]
+    H -->|Yes, confirmed| SV[Save to config.yaml]
+    SV --> D
+    T --> D
     D --> K[AI Response Generator]
-    E --> K
     K --> L[Formatted CLI Output]
 ```
 
@@ -452,23 +457,22 @@ Time period: {dateRange}
 
 ### 4.4 Query Parser (`src/core/query-parser.ts`)
 
-**Responsibility**: Extract intent and entities (person name) from natural language input.
+**Responsibility**: Extract intent, scope, and entities (person name) from natural language input.
 
 **Supported Query Patterns**:
 
 ```
-"What is {name} working on?"
-"and what does {name} is working on?"
-"tell me about {name}'s status"
-"show me {name}'s JIRA issues"
-"has {name} pushed any code recently?"
+"What is {name} working on?" (Individual)
+"Who all worked on GitHub?" (Team-wide)
+"Show me team activity" (Team-wide)
 ```
 
-**Implementation Strategy**: AI-powered extraction (LLM) as primary, with a robust Regex-based pattern matching fallback for offline use or speed.
+**Implementation Strategy**: AI-powered extraction (LLM) as primary, with a robust Regex-based pattern matching fallback.
 
 ```typescript
 interface ParsedQuery {
   intent: "full_activity" | "jira_only" | "github_only";
+  scope: "individual" | "team";
   personName: string | null;
   raw: string;
 }
@@ -478,8 +482,9 @@ async function parseQuery(input: string): Promise<ParsedQuery>;
 
 **Architecture**:
 
-1. **AI Parse**: Uses the LLM to understand natural phrasing and extract `person` and `intent` as structured JSON.
-2. **Regex Fallback**: If AI is unavailable, uses pre-defined patterns to extract entities, ensuring the app always functions.
+1. **Rule-based Sanitization**: Every query is filtered for prompt injection and SQLi before parsing.
+2. **AI Parse**: Uses the LLM to understand natural phrasing and extract fields as structured JSON.
+3. **Regex Fallback**: If AI is unavailable, uses pre-defined patterns to extract entities.
 
 **Intent Classification**:
 
@@ -498,16 +503,13 @@ async function parseQuery(input: string): Promise<ParsedQuery>;
 **Matching Algorithm**:
 
 1. **Local lookup** (from `config.yaml` team list):
-   - Exact match (case-insensitive) → auto-select
-   - Partial match (first name, last name) → auto-select if exactly one match
-   - Fuzzy match (Levenshtein distance) → auto-select if score > 0.85
-   - Multiple close matches → prompt user with numbered list
-2. **API fallback** (if no local match found):
-   - Search JIRA user API (`/rest/api/3/user/search?query={name}`)
-   - Search GitHub user API (`/search/users?q={name}`)
-   - Present combined candidates from both platforms
-   - User confirms the correct match
-   - **Persist** the confirmed member to `config.yaml` for future lookups
+   - Exact/Partial/Fuzzy matching.
+2. **Manual Override [M]**:
+   - During disambiguation, the user can press **'M'** to manually specify a GitHub username.
+   - The tool fetches the user directly from GitHub to verify and add them to the team.
+3. **API fallback**:
+   - Search JIRA + GitHub APIs.
+   - Confirmed members are **persisted** to `config.yaml`.
 
 ```typescript
 interface MatchResult {
@@ -1201,3 +1203,17 @@ You: quit
 > - Should we add a `--non-interactive` flag for scripted usage?
 > - Do we want to support "compare two team members" queries? (e.g., "Compare John and Sarah's activity")
 > - Should the smoke test script be a formal test suite (Vitest/Jest) or a simple script?
+
+---
+
+## 12. Security Safeguards
+
+**Responsibility**: Protect the tool, the user, and the AI session from malicious input.
+
+**Sanitization Pipeline**:
+
+1. **Rule-based Filter**: Detects prompt injection (20+ patterns), SQL injection, and JSON payloads.
+2. **Length Capping**: Rejects inputs > 500 characters.
+3. **Prompt Hardening**: Role locking and output constraints in LLM instructions.
+4. **AI Safety Rules**: Prevents prompt leaking, data-driven injection, and off-topic conversations.
+5. **Entity Validation**: Extracted names are validated against a strict allowlist regex (`/^[a-zA-Z\s.\-']+$/`).
