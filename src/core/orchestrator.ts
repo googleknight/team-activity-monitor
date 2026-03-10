@@ -63,11 +63,17 @@ export async function processQuery(
   // Step 1: Parse the query (AI-powered with regex fallback)
   const parsed = await parseQuery(input);
 
+  // Step 1.5: Handle team-wide queries
+  if (parsed.scope === "team") {
+    return await processTeamQuery(parsed);
+  }
+
   if (!parsed.personName) {
     return (
       "❓ I couldn't figure out who you're asking about. Try something like:\n" +
       '   "What is John working on?"\n' +
       '   "Show me Sarah\'s pull requests"\n' +
+      '   "Who all worked on GitHub this week?"\n' +
       "   Type `help` for more examples."
     );
   }
@@ -113,6 +119,57 @@ export async function processQuery(
 }
 
 /**
+ * Process a team-wide query — fetch activity for all configured members.
+ */
+async function processTeamQuery(parsed: ParsedQuery): Promise<string> {
+  const team = getTeam();
+
+  if (team.length === 0) {
+    return (
+      "📭 No team members configured yet.\n" +
+      '   Ask about someone by name first (e.g., "What is John working on?") and I\'ll discover them.'
+    );
+  }
+
+  const results: string[] = [];
+  const allErrors: string[] = [];
+
+  for (const member of team) {
+    const { jiraIssues, githubActivity, errors } = await fetchActivity(
+      member,
+      parsed,
+    );
+
+    allErrors.push(...errors.map((e) => `${member.name}: ${e}`));
+
+    const hasActivity =
+      jiraIssues.length > 0 ||
+      githubActivity.commits.length > 0 ||
+      githubActivity.pullRequests.length > 0;
+
+    if (hasActivity) {
+      const summary = formatTemplateFallback(
+        member,
+        jiraIssues,
+        githubActivity,
+      );
+      results.push(summary);
+    } else {
+      results.push(`📭 ${member.name} — No recent activity found.\n`);
+    }
+  }
+
+  let output = `\n📋 Team Activity Summary (${team.length} members)\n${"━".repeat(50)}\n\n`;
+  output += results.join("\n");
+
+  if (allErrors.length > 0) {
+    output += "\n" + allErrors.map((e) => `⚠️  ${e}`).join("\n") + "\n";
+  }
+
+  return output;
+}
+
+/**
  * Resolve a name string to a TeamMember (local → API → user confirmation).
  */
 async function resolveTeamMember(
@@ -130,7 +187,14 @@ async function resolveTeamMember(
   }
 
   if (localResult.status === "ambiguous" && localResult.candidates) {
-    return promptForDisambiguation(localResult.candidates, name);
+    const selected = await promptForDisambiguation(
+      localResult.candidates,
+      name,
+    );
+    if (selected && (selected.jiraAccountId || selected.githubUsername)) {
+      saveMember(selected);
+    }
+    return selected;
   }
 
   // Not found locally — try API discovery

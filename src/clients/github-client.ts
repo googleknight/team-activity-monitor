@@ -309,6 +309,31 @@ export async function searchUsers(
 }
 
 /**
+ * Fetch a specific user by their GitHub username.
+ */
+export async function getUserByUsername(
+  username: string,
+): Promise<GitHubUserSearchResult | null> {
+  try {
+    const u = (await githubFetch(
+      `/users/${encodeURIComponent(username)}`,
+    )) as Record<string, unknown>;
+
+    return {
+      login: u["login"] as string,
+      name: (u["name"] as string | null) || null,
+      avatarUrl: (u["avatar_url"] as string) || "",
+      profileUrl: (u["html_url"] as string) || "",
+    };
+  } catch (err) {
+    if (err instanceof GithubApiError && err.code === "GITHUB_NOT_FOUND") {
+      return null;
+    }
+    throw err;
+  }
+}
+
+/**
  * Check if GitHub is configured and accessible.
  */
 export async function testConnection(): Promise<boolean> {

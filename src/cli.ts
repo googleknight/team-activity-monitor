@@ -13,7 +13,7 @@ import {
   init as initOrchestrator,
 } from "./core/orchestrator.js";
 import { sanitizeInput } from "./core/query-parser.js";
-import { getTeam } from "./core/user-matcher.js";
+import { getTeam, getMemberByGithubUsername } from "./core/user-matcher.js";
 import type { TeamMember } from "./types/activity.js";
 
 const BANNER = `
@@ -29,12 +29,17 @@ const HELP_TEXT = `
 ${chalk.bold("📖 Usage")}
 ${chalk.dim("━".repeat(40))}
 
-${chalk.bold("Example queries:")}
+${chalk.bold("Individual queries:")}
   ${chalk.cyan('"What is John working on?"')}
   ${chalk.cyan('"Show me recent activity for Sarah"')}
   ${chalk.cyan('"What JIRA tickets is John working on?"')}
   ${chalk.cyan('"Show me Lisa\'s recent pull requests"')}
   ${chalk.cyan('"What has Mike committed this week?"')}
+
+${chalk.bold("Team-wide queries:")}
+  ${chalk.cyan('"Who all worked on GitHub this week?"')}
+  ${chalk.cyan('"Show me team activity"')}
+  ${chalk.cyan('"Everyone\'s recent commits"')}
 
 ${chalk.bold("Special commands:")}
   ${chalk.yellow("help")}         — Show this help message
@@ -245,11 +250,51 @@ async function disambiguate(
       details.length > 0 ? chalk.dim(` (${details.join(" | ")})`) : "";
     console.log(`  ${chalk.bold(`${i + 1}.`)} ${c.name}${detailStr}`);
   }
+  console.log(
+    `  ${chalk.bold("M.")} ${chalk.cyan("Manual entry (GitHub username)")}`,
+  );
   console.log(`  ${chalk.bold("0.")} ${chalk.dim("Cancel")}`);
 
   return new Promise((resolve) => {
-    rl.question(chalk.green("\nPlease enter the number: "), (answer) => {
-      const num = parseInt(answer.trim(), 10);
+    rl.question(chalk.green("\nPlease enter selection: "), async (answer) => {
+      const choice = answer.trim().toLowerCase();
+
+      if (choice === "m") {
+        rl.question(chalk.green("Enter GitHub username: "), async (ghUser) => {
+          const username = ghUser.trim();
+          if (!username) {
+            console.log(chalk.dim("Cancelled."));
+            return resolve(null);
+          }
+
+          spinner.start(`Verifying GitHub user "${username}"...`);
+          try {
+            const selected = await getMemberByGithubUsername(username);
+            spinner.stop();
+            if (selected) {
+              console.log(chalk.green(`✅ Found: ${selected.name}`));
+              spinner.start(`Fetching activity for ${selected.name}...`);
+              resolve(selected);
+            } else {
+              console.log(
+                chalk.red(`❌ User "${username}" not found on GitHub.`),
+              );
+              resolve(null);
+            }
+          } catch (err) {
+            spinner.stop();
+            console.log(
+              chalk.red(
+                `❌ Failed to verify user: ${err instanceof Error ? err.message : String(err)}`,
+              ),
+            );
+            resolve(null);
+          }
+        });
+        return;
+      }
+
+      const num = parseInt(choice, 10);
       if (num === 0 || isNaN(num) || num < 0 || num > candidates.length) {
         console.log(chalk.dim("Cancelled."));
         resolve(null);

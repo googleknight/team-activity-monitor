@@ -35,6 +35,8 @@ export interface TeamMemberActivity {
 /** Parsed user query with intent and extracted name */
 export interface ParsedQuery {
   intent: "full_activity" | "jira_only" | "github_only";
+  /** "individual" = asking about a specific person, "team" = asking about everyone */
+  scope: "individual" | "team";
   personName: string | null;
   raw: string;
 }

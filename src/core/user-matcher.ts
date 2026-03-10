@@ -142,6 +142,22 @@ export function saveMember(member: TeamMember): void {
 }
 
 /**
+ * Fetch a member by their exact GitHub username and return as TeamMember.
+ */
+export async function getMemberByGithubUsername(
+  username: string,
+): Promise<TeamMember | null> {
+  const gUser = await githubClient.getUserByUsername(username);
+  if (!gUser) return null;
+
+  return {
+    name: gUser.name || gUser.login,
+    jiraAccountId: "",
+    githubUsername: gUser.login,
+  };
+}
+
+/**
  * Get the full team list from config.
  */
 export function getTeam(): TeamMember[] {
