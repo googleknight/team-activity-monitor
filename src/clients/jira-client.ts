@@ -82,11 +82,8 @@ export function getDateRange(): DateRange {
   const to = new Date();
   const from = new Date();
 
-  // Use days lookback (sprints mode would require fetching sprints first)
-  const days =
-    config.jira.lookbackMode === "days"
-      ? config.jira.lookbackDays
-      : config.jira.lookbackSprints * 14; // Approximate: 2 weeks per sprint
+  // Use days lookback
+  const days = config.jira.lookbackDays;
 
   from.setDate(from.getDate() - days);
 
@@ -114,7 +111,7 @@ export async function getUserIssues(accountId: string): Promise<JiraIssue[]> {
 
   const encodedJql = encodeURIComponent(jql);
   const data = (await jiraFetch(
-    `/rest/api/3/search?jql=${encodedJql}&fields=${fields}&maxResults=50`,
+    `/rest/api/3/search/jql?jql=${encodedJql}&fields=${fields}&maxResults=50`,
   )) as { issues?: Array<Record<string, unknown>>; total?: number };
 
   const issues = data.issues || [];

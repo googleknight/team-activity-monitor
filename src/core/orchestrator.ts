@@ -60,8 +60,8 @@ export async function processQuery(
     query: string,
   ) => Promise<TeamMember | null>,
 ): Promise<string> {
-  // Step 1: Parse the query
-  const parsed = parseQuery(input);
+  // Step 1: Parse the query (AI-powered with regex fallback)
+  const parsed = await parseQuery(input);
 
   if (!parsed.personName) {
     return (

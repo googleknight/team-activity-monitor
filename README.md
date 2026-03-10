@@ -108,7 +108,7 @@ src/
 │   ├── github-client  # GitHub REST API (commits, PRs, user search)
 │   └── ai-client      # Vercel AI SDK (Gemini/OpenAI/Claude)
 ├── core/              # Business logic
-│   ├── query-parser   # Intent + entity extraction from NL queries
+│   ├── query-parser   # AI-powered intent + entity extraction (with regex fallback)
 │   ├── user-matcher   # Fuzzy matching + API discovery
 │   ├── cache-manager  # In-memory TTL cache
 │   ├── response-formatter  # Format for AI + terminal

@@ -56,7 +56,7 @@ flowchart LR
 | A2  | JIRA instance is Atlassian Cloud (REST API v3)                                                               |
 | A3  | GitHub repos are accessible with a single PAT (Personal Access Token)                                        |
 | A4  | "Recent" is configurable — defaults to 7 days, but can be changed via `config.yaml`                          |
-| A5  | All JIRA statuses are included in results                                                                    |
+| A5  | JIRA results focus on active work — excludes issues in the "Done" status category                            |
 | A6  | The AI provider defaults to Gemini (free tier) but is switchable via config using Vercel AI SDK              |
 
 ---
@@ -151,9 +151,7 @@ jira:
     - "PROJ"
     - "TEAM"
   board_id: 42 # Board ID for sprint data (optional)
-  lookback_sprints: 4 # Number of past sprints to include (sprint mode)
-  lookback_days: 7 # Fallback: days to look back (day mode)
-  lookback_mode: "days" # "sprints" or "days" — which mode to use
+  lookback_days: 7 # Days to look back for activity
 
 # GitHub Configuration
 github:
@@ -198,9 +196,7 @@ interface AppConfig {
     apiToken: string;
     projectKeys: string[];
     boardId?: number;
-    lookbackSprints: number;
     lookbackDays: number;
-    lookbackMode: "sprints" | "days";
   };
   github: {
     token: string;
@@ -233,12 +229,11 @@ interface TeamMember {
 
 **API Endpoints Used**:
 
-| Method | Endpoint                                 | Purpose                                    |
-| ------ | ---------------------------------------- | ------------------------------------------ |
-| `GET`  | `/rest/api/3/search`                     | Search issues by assignee + project        |
-| `GET`  | `/rest/agile/1.0/board/{boardId}/sprint` | List sprints for a board                   |
-| `GET`  | `/rest/api/3/issue/{issueKey}`           | Get issue details (if needed)              |
-| `GET`  | `/rest/api/3/user/search?query={name}`   | Search for users by name (hybrid registry) |
+| Method | Endpoint                               | Purpose                                    |
+| ------ | -------------------------------------- | ------------------------------------------ |
+| `GET`  | `/rest/api/3/search/jql`               | Search issues using JQL                    |
+| `GET`  | `/rest/api/3/issue/{issueKey}`         | Get issue details (if needed)              |
+| `GET`  | `/rest/api/3/user/search?query={name}` | Search for users by name (hybrid registry) |
 
 **Key Functions**:
 
@@ -463,17 +458,13 @@ Time period: {dateRange}
 
 ```
 "What is {name} working on?"
-"What is {name} working on these days?"
-"What has {name} been working on this week?"
-"Show me {name}'s current issues"
-"What JIRA tickets is {name} working on?"
-"Show me recent activity for {name}"
-"What has {name} committed this week?"
-"Show me {name}'s recent pull requests"
-"{name}'s activity"
+"and what does {name} is working on?"
+"tell me about {name}'s status"
+"show me {name}'s JIRA issues"
+"has {name} pushed any code recently?"
 ```
 
-**Implementation Strategy**: Regex-based pattern matching (not AI-based — too slow and overkill for ~10 patterns).
+**Implementation Strategy**: AI-powered extraction (LLM) as primary, with a robust Regex-based pattern matching fallback for offline use or speed.
 
 ```typescript
 interface ParsedQuery {
@@ -482,8 +473,13 @@ interface ParsedQuery {
   raw: string;
 }
 
-function parseQuery(input: string): ParsedQuery;
+async function parseQuery(input: string): Promise<ParsedQuery>;
 ```
+
+**Architecture**:
+
+1. **AI Parse**: Uses the LLM to understand natural phrasing and extract `person` and `intent` as structured JSON.
+2. **Regex Fallback**: If AI is unavailable, uses pre-defined patterns to extract entities, ensuring the app always functions.
 
 **Intent Classification**:
 

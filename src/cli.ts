@@ -200,13 +200,7 @@ function showConfig(): void {
   console.log(
     `  JIRA Projects:${chalk.cyan(` ${config.jira.projectKeys.join(", ")}`)}`,
   );
-  console.log(
-    `  Lookback:     ${
-      config.jira.lookbackMode === "sprints"
-        ? `${config.jira.lookbackSprints} sprints`
-        : `${config.jira.lookbackDays} days`
-    }`,
-  );
+  console.log(`  Lookback:     ${config.jira.lookbackDays} days`);
   console.log("");
   console.log(`  GitHub Repos: ${chalk.cyan(config.github.repos.join(", "))}`);
   console.log(`  GH Lookback:  ${config.github.lookbackDays} days`);

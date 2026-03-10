@@ -16,9 +16,7 @@ jira:
   project_keys:                  # JIRA project keys to search within
     - "PROJ"
   board_id: 1                   # Board ID for sprint data (optional, set to 0 to disable)
-  lookback_sprints: 4           # Number of past sprints to include (sprint mode)
-  lookback_days: 7             # Fallback: days to look back (day mode, ~8 weeks)
-  lookback_mode: "days"         # "sprints" or "days" — which mode to use
+  lookback_days: 7              # Number of days to look back for activity (~1 week)
 
 # GitHub Configuration
 github:

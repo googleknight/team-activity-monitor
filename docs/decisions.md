@@ -89,13 +89,13 @@ A hand-rolled wrapper with `switch(provider)` and 3 adapter functions works, but
 
 ## D6: Configurable Time Window for "Recent" Activity
 
-| Aspect             | Detail                                                                                                                                                                                                                       |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Problem**        | The prompt asks for "recent activity" but doesn't define what "recent" means. Is it yesterday? Last week? Last month?                                                                                                        |
-| **Decision**       | Make the "recent activity" window **fully configurable** via `config.yaml`. Support two modes: **sprint-based** (last N sprints) or **day-based** (last N days). Default to 7 days.                                          |
-| **Rationale**      | Different teams have different cadence. Sprints are more meaningful in agile environments, but flat day periods are simpler. Giving the user control prevents the CLI from becoming a black box that makes poor assumptions. |
-| **Config example** | `jira.lookback_days: 7` and `github.lookback_days: 7` — these can be changed by the user at any time without touching code.                                                                                                  |
-| **Trade-off**      | None significant. The config parsing already handles this; the JIRA client just reads the configured value.                                                                                                                  |
+| Aspect             | Detail                                                                                                                                  |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| **Problem**        | The prompt asks for "recent activity" but doesn't define what "recent" means. Is it yesterday? Last week? Last month?                   |
+| **Decision**       | Make the "recent activity" window **fully configurable** via `config.yaml`. Default to 7 days.                                          |
+| **Rationale**      | Different teams have different cadence. Giving the user control prevents the CLI from becoming a black box that makes poor assumptions. |
+| **Config example** | `jira.lookback_days: 7` and `github.lookback_days: 7` — these can be changed by the user at any time without touching code.             |
+| **Trade-off**      | None significant. The config parsing already handles this; the JIRA client just reads the configured value.                             |
 
 ---
 
@@ -190,16 +190,39 @@ A hand-rolled wrapper with `switch(provider)` and 3 adapter functions works, but
 
 ---
 
+---
+
+## D15: AI-Powered Query Parsing with Regex Fallback
+
+| Aspect             | Detail                                                                                                                                                                                                                                                                              |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Decision**       | Use the **LLM (AI)** to parse natural language queries into structured `person` and `intent` data. If the AI call fails, use a secondary **Regex-based parser** as a fallback.                                                                                                      |
+| **Rationale**      | Human language is complex and varied. Using regex alone makes the bot fragile (e.g., "what does Sarah is working on" would fail). AI handles conversational phrasing effortlessly. The regex fallback ensures the bot remains functional even in offline or rate-limited scenarios. |
+| **Implementation** | Deterministic parsing using a system prompt with JSON-only output and temperature 0.                                                                                                                                                                                                |
+| **Trade-off**      | Adds slight latency (~200-500ms) to the initial query processing, but the benefit of understanding any input far outweighs the delay.                                                                                                                                               |
+
+---
+
+## D16: Filtering 'Done' Issues by Default
+
+| Aspect        | Detail                                                                                                                                                                                                                                                               |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Decision**  | Modify the JIRA query (JQL) to exclude issues in the `statusCategory = Done`.                                                                                                                                                                                        |
+| **Rationale** | Evaluation feedback suggests prioritizing "active" or "in-progress" work. Completed issues clutter the summary and don't reflect current focus. By filtering these out at the API level, we reduce context window noise and improve the quality of the AI's summary. |
+| **Trade-off** | Users who _specifically_ want to see what someone finished will not see those tickets, but for the primary use case of "what are they working on", this is a superior experience.                                                                                    |
+
 ## Summary of Key Trade-offs
 
 | We Prioritize              | Over                       | Why                                                   |
 | -------------------------- | -------------------------- | ----------------------------------------------------- |
 | Functionality depth        | UI polish                  | 80% of evaluation is Technical + Functionality        |
 | Type safety (TS + Zod)     | Speed of writing code      | Prevents demo-killing runtime errors                  |
+| AI-Powered Parsing         | Rigid Regex Only           | Understanding natural, complex human queries          |
+| Context focus (No 'Done')  | Raw data dump              | Summarizes what matters (active work)                 |
 | Clean grouped structure    | Flat files                 | Demonstrates architectural thinking per eval criteria |
 | Vercel AI SDK              | LangChain / custom wrapper | Right abstraction level — not too heavy, not too thin |
 | Hybrid user registry       | Static-only config         | Self-building, demonstrates real API integration      |
 | Configurable time window   | Hardcoded 7 days           | Flexibility for different use cases                   |
 | Basic in-memory cache      | No cache                   | Low effort, earns bonus points                        |
-| Standard tooling (ts-node) | Newer alternatives         | Conventional, well-documented, production-standard    |
+| Modern developer stability | Standard tooling (ts-node) | Prioritizes working builds on latest Node versions    |
 | Validated AI output        | Blind trust in LLM         | Prevents showing fabricated ticket/PR numbers         |

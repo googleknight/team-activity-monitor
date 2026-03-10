@@ -31,9 +31,7 @@ export interface AppConfig {
     apiToken: string;
     projectKeys: string[];
     boardId: number;
-    lookbackSprints: number;
     lookbackDays: number;
-    lookbackMode: "sprints" | "days";
   };
   github: {
     token: string;
@@ -130,9 +128,7 @@ export function loadConfig(): AppConfig {
       apiToken: jiraApiToken,
       projectKeys: parseResult.data.jira.project_keys,
       boardId: parseResult.data.jira.board_id,
-      lookbackSprints: parseResult.data.jira.lookback_sprints,
       lookbackDays: parseResult.data.jira.lookback_days,
-      lookbackMode: parseResult.data.jira.lookback_mode,
     },
     github: {
       token: githubToken,
