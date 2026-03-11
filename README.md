@@ -2,6 +2,10 @@
 
 A CLI chatbot that answers questions like _"What is [member] working on?"_ by fetching and combining data from JIRA and GitHub, then generating a human-readable summary using a configurable AI provider.
 
+## Demo
+
+Click to play the demo video: [![Team Activity Monitor Demo](/docs/screenshot.png)](https://drive.google.com/file/d/1fVr3FVYpp3dyBZGYQGbb4OJofjOH698p/view?usp=sharing)
+
 ## Quick Start
 
 ### Prerequisites
