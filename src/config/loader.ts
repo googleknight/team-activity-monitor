@@ -168,11 +168,15 @@ export function persistTeamMember(member: TeamMember): void {
     throw new ConfigError("Cannot persist member — config not loaded.");
   }
 
-  // Check for duplicates
+  // Check for duplicates — only compare non-empty values to avoid
+  // false positives when both the existing member and the new member
+  // have empty jira_account_id or github_username strings.
   const exists = _rawYaml.team.some(
     (t) =>
-      t.jira_account_id === member.jiraAccountId ||
-      t.github_username === member.githubUsername,
+      (member.jiraAccountId !== "" &&
+        t.jira_account_id === member.jiraAccountId) ||
+      (member.githubUsername !== "" &&
+        t.github_username === member.githubUsername),
   );
   if (exists) return;
 
